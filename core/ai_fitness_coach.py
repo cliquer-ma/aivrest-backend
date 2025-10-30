@@ -8,6 +8,7 @@ import random
 
 from copy import deepcopy
 from datetime import datetime
+import codecs
 
 from presets.agents import (
     AGENTS
@@ -177,4 +178,5 @@ class AIFitnessCoach:
             default_fallback_message = "Je suis désolé, je ne comprends pas votre message."
             return default_fallback_message
 
+        new_message = codecs.decode(new_message, 'unicode_escape')
         return new_message

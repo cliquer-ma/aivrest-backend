@@ -55,13 +55,27 @@ class ChatsView(AuthMixin, APIView):
         # api_key          = self.api_key
 
         user_id         = request.GET.get('user_id', None)
+        min_date_str    = request.GET.get('min_date', None)
+
+        min_date        = None
 
         if not user_id:
             context['code']    = 400
             context['message'] = "Invalid parameters"
             return JsonResponse(context)
 
+        try:
+            min_date = datetime.strptime(min_date_str, '%Y-%m-%d')
+        except ValueError:
+            context['code']    = 400
+            context['message'] = "Invalid Date Format"
+            return JsonResponse(context)
+
         chats       = Chat.objects.filter(user=user_id)
+
+        if min_date is not None:
+            chats = chats.filter(created_at__gte=min_date)
+
         chats_data  = []
 
         for chat in chats:
@@ -119,7 +133,7 @@ class ChatView(AuthMixin, APIView):
         message_type    = ChatMessageType.objects.filter(reference='direct_question').first()
         user_message    = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
 
-        chat_agent      =  Agent.objects.filter(reference='chat_agent').last()
+        chat_agent      = Agent.objects.filter(reference='chat_agent').last()
         new_message     = ai_fitness_coach.process_user_message(user_message.message, chat_history)
 
         message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
@@ -127,9 +141,7 @@ class ChatView(AuthMixin, APIView):
 
         context['code'] = 200
         context['data'] = {
-            'chat'   : {
-                'id' : chat.reference,
-            },
+            'chat'   : {'id' : chat.reference},
             'user_message'  : {
                 'id'        : user_message.reference,
                 'message'   : user_message.message,

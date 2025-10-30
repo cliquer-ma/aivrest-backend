@@ -280,8 +280,6 @@ AGENTS = {
             },
         )
     },
-
-    # TODO: Implement nutrition planner agent SCHEMA AND SYSTEM INSTRUCTIONS
     'nutrition_planner': {
         'model'                 : 'gemini-2.5-pro',
         'thinking_budget'       : -1,
