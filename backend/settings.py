@@ -57,31 +57,6 @@ DATABASE_PASSWORD                   = os.getenv('DATABASE_PASSWORD')
 DATABASE_HOST                       = os.getenv('DATABASE_HOST')
 DATABASE_PORT                       = os.getenv('DATABASE_PORT')
 
-SHOPIFY_API_KEY                     = os.getenv('SHOPIFY_API_KEY')
-SHOPIFY_API_SECRET                  = os.getenv('SHOPIFY_API_SECRET')
-SHOPIFY_API_VERSION                 = os.getenv('SHOPIFY_API_VERSION')
-SHOPIFY_API_SCOPE                   = [
-    'read_custom_pixels',
-    'write_custom_pixels',
-
-    'read_customers',
-    'write_customers',
-
-    'read_fulfillments',
-    'write_fulfillments',
-
-    'read_orders',
-
-    'read_products',
-    'write_products',
-
-    'read_script_tags',
-    'write_script_tags',
-
-    'read_themes',
-    'write_themes'
-]
-
 JWT_SECRET_KEY                      = os.getenv('JWT_SECRET_KEY')
 JWT_ALGORITHM                       = "HS256"
 

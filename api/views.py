@@ -15,13 +15,21 @@ from rest_framework import status
 from agents.models import (
     Agent,
     Chat,
+    ChatMessageType,
     ChatMessage
+)
+
+from core.ai_fitness_coach import (
+    AIFitnessCoach
 )
 
 from phonenumbers import geocoder, parse
 from datetime import datetime
 import requests
 import json
+
+
+ai_fitness_coach = AIFitnessCoach(api_key=settings.GEMINI_API_KEY)
 
 class AuthMixin:
     def dispatch(self, request, *args, **kwargs):
@@ -108,15 +116,15 @@ class ChatView(AuthMixin, APIView):
             context['message'] = "Pending agent response"
             return JsonResponse(context)
 
-        user_message = ChatMessage.objects.create(chat=chat, user=user_id, message=user_message)
+        message_type = ChatMessageType.objects.filter(reference='direct_question').first()
+        user_message = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
 
-        # GENERIC RESPONSES
-        messages = [
-            "Bonjour, je suis votre assistant AIVREST. Comment puis-je vous aider aujourd'hui ?",
-        ]
+        chat_agent      =  Agent.objects.filter(reference='chat_agent').last()
 
-        agent         = Agent.objects.filter(reference='CHAT_AGENT').last()
-        agent_message = ChatMessage.objects.create(chat=chat, agent=agent, message=messages[0])
+        new_message     = ai_fitness_coach.process_user_message(user_message.message)
+
+        message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
+        agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
 
         context['code'] = 200
         context['data'] = {
