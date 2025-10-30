@@ -22,9 +22,3 @@ class AppSettings(BaseModel):
     def __str__(self):
         return self.reference
 
-
-class Status(BaseModel):
-    label = models.JSONField(default=dict)
-
-    def __str__(self):
-        return self.label

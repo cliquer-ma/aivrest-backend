@@ -2,7 +2,6 @@ from django.db import models
 
 from core.models import (
     BaseModel,
-    Status
 )
 
 from core.utils import (
