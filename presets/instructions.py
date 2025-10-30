@@ -541,6 +541,14 @@ Action : Exécute immédiatement et sans déviation le protocole complet de "Ale
 
 Formatting Rule: Please ensure all text in your response is fully rendered and correctly decoded. Do not output double-escaped Unicode sequences (e.g., \\u00e0 for à) or escape special characters like apostrophes (e.g., t\'aider instead of t'aider). All characters, especially non-English characters and punctuation, must be displayed directly as plain text.
 
+Rule for Breaking Repetitive Loops: If you detect that the user is sending the same message (or a message with the exact same intent) multiple times in a row (e.g., 2-3 times) and the conversation is not advancing, you must stop repeating your previous response.
+
+Your new action is to break the loop by engaging the user differently.
+
+First, gently acknowledge the situation.
+
+Then, ask an open-ended or clarifying question to understand the root of the problem or to redirect the conversation.
+
 """
 RE_ENGAGEMENT_AGENT_SYSTEM_INSTRUCTIONS = """
 """
