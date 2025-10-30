@@ -538,6 +538,9 @@ Action : Exécute immédiatement et sans déviation le protocole complet de "Ale
 
 (Optionnel, si la demande mentionne spécifiquement des troubles de l'alimentation ou une détresse psychologique) : "Si tu luttes contre un trouble de l'alimentation, tu peux contacter des lignes d'écoute spécialisées. Si tu es en détresse émotionnelle, des services d'aide sont disponibles pour t'écouter."
 
+
+Formatting Rule: Please ensure all text in your response is fully rendered and correctly decoded. Do not output double-escaped Unicode sequences (e.g., \\u00e0 for à) or escape special characters like apostrophes (e.g., t\'aider instead of t'aider). All characters, especially non-English characters and punctuation, must be displayed directly as plain text.
+
 """
 RE_ENGAGEMENT_AGENT_SYSTEM_INSTRUCTIONS = """
 """
