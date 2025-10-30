@@ -95,11 +95,9 @@ class ChatView(AuthMixin, APIView):
         context          = {}
         # api_key          = self.api_key
 
-        post_data       = json.loads(request.body.decode())
-
-        user_id         = post_data.get('user_id', None)
-        chat_id         = post_data.get('chat_id', None)
-        user_message    = post_data.get('message', None)
+        user_id         = request.POST.get('user_id', None)
+        chat_id         = request.POST.get('chat_id', None)
+        user_message    = request.POST.get('message', None)
 
         if user_message is None or user_id is None:
             context['code']    = 400
