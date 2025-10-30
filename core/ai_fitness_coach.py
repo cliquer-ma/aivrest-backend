@@ -145,7 +145,7 @@ class AIFitnessCoach:
             return None
 
 
-    def _call_chat_agent(self, message: str, profile: dict, explanation_message: str, threshold_met: bool, program_generation_starting: bool = False) -> dict:
+    def _call_chat_agent(self, message: str):
 
         json_content = {
             'user_message'          : message,
