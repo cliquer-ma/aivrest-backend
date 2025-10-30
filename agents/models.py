@@ -23,7 +23,7 @@ class Chat(BaseModel):
         return self.reference
 
     def get_messaages(self):
-        return self.objects.filter(chat=self.chat).order_by('-created_at')
+        return ChatMessage.objects.filter(chat=self).order_by('-created_at')
 
     def get_last_message(self):
         return self.get_messaages().first()
