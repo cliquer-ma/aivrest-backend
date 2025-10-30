@@ -33,11 +33,18 @@ class Chat(BaseModel):
             self.reference = generate_reference(Chat, 15)
         super().save(*args, **kwargs)
 
+class ChatMessageType(BaseModel):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 class ChatMessage(BaseModel):
-    agent   = models.ForeignKey('agents.Agent', on_delete=models.CASCADE, blank=True, null=True)
-    user    = models.TextField(blank=True, null=True)
-    chat    = models.ForeignKey('agents.Chat', on_delete=models.CASCADE)
-    message = models.TextField()
+    message_type = models.ForeignKey('agents.ChatMessageType', on_delete=models.CASCADE, blank=True, null=True)
+    agent        = models.ForeignKey('agents.Agent', on_delete=models.CASCADE, blank=True, null=True)
+    user         = models.TextField(blank=True, null=True)
+    chat         = models.ForeignKey('agents.Chat', on_delete=models.CASCADE)
+    message      = models.TextField()
 
     def __str__(self):
         return self.reference
