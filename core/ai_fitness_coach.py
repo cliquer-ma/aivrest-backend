@@ -148,7 +148,7 @@ class AIFitnessCoach:
     def _call_chat_agent(self, message: str, messages_history: list):
 
         json_content = {
-            'user_message'          : message,
+            'last_user_message'     : message,
             'messages_history'      : messages_history,
             # 'user_profile'          : profile,
             # 'explanation_message'   : explanation_message,
