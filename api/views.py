@@ -132,7 +132,7 @@ class ChatView(AuthMixin, APIView):
                 'created_at': user_message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'updated_at': user_message.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'deleted'   : user_message.deleted,
-            } ,
+            },
             'agent_message' : {
                 'id'        : agent_message.reference,
                 'message'   : agent_message.message,

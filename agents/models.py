@@ -22,6 +22,12 @@ class Chat(BaseModel):
     def __str__(self):
         return self.reference
 
+    def get_messaages(self):
+        return self.objects.filter(chat=self.chat).order_by('-created_at')
+
+    def get_last_message(self):
+        return self.get_messaages().first()
+
     def save(self, *args, **kwargs):
         if self.pk is None :
             self.reference = generate_reference(Chat, 15)
@@ -40,9 +46,3 @@ class ChatMessage(BaseModel):
         if self.pk is None :
             self.reference = generate_reference(ChatMessage, 20)
         super().save(*args, **kwargs)
-
-    def get_messaages(self):
-        return self.objects.filter(chat=self.chat).order_by('-created_at')
-
-    def get_last_message(self):
-        return self.get_messaages().first()
