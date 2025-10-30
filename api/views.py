@@ -114,12 +114,13 @@ class ChatView(AuthMixin, APIView):
             context['message'] = "Pending agent response"
             return JsonResponse(context)
 
-        message_type = ChatMessageType.objects.filter(reference='direct_question').first()
-        user_message = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
+        chat_history    = chat.get_messages_ai_formatted()
+
+        message_type    = ChatMessageType.objects.filter(reference='direct_question').first()
+        user_message    = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
 
         chat_agent      =  Agent.objects.filter(reference='chat_agent').last()
-
-        new_message     = ai_fitness_coach.process_user_message(user_message.message)
+        new_message     = ai_fitness_coach.process_user_message(user_message.message, chat_history)
 
         message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
         agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)

@@ -25,6 +25,17 @@ class Chat(BaseModel):
     def get_messaages(self):
         return ChatMessage.objects.filter(chat=self).order_by('-created_at')
 
+    def get_messages_ai_formatted(self):
+        data = []
+        for message in self.get_messaages():
+            data.append({
+                'sent_by_ai_agent'  : message.agent is not None,
+                'sent_by_user'      : message.user is not None,
+                'direction'         : 'sent' if message.user is not None else 'received',
+                'message'           : message.message
+            })
+        return data
+
     def get_last_message(self):
         return self.get_messaages().first()
 
