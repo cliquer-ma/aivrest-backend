@@ -552,7 +552,7 @@ class CreatePostView(AuthMixin, APIView):
 
         user_id = request.POST.get('user_id', None)
         content = request.POST.get('content', None)
-        base64_attachments = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
+        attachment_urls = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
 
         if not user_id or not content:
             context['code'] = 400
