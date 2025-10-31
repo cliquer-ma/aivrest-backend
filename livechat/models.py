@@ -4,6 +4,10 @@ from core.models import (
     BaseModel
 )
 
+from core.utils import (
+    generate_reference
+)
+
 
 class LiveChatRoom(BaseModel):
     users = models.JSONField(default=list)
