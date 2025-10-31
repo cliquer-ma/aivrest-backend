@@ -4,6 +4,10 @@ from core.models import (
     BaseModel
 )
 
+from core.utils import (
+    generate_reference
+)
+
 class Post(BaseModel):
     user            = models.TextField(default="")
     content         = models.TextField(default="")
