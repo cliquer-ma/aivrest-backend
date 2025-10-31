@@ -83,17 +83,20 @@ class ChatsView(AuthMixin, APIView):
             context['message'] = "Invalid parameters"
             return JsonResponse(context)
 
-        try:
-            min_date = datetime.strptime(min_date_str, '%Y-%m-%d')
-        except:
-            context['code']    = 400
-            context['message'] = "Invalid Date Format"
-            return JsonResponse(context)
 
         chats       = Chat.objects.filter(user=user_id)
         chats_data  = []
 
         if min_date is not None:
+
+            try:
+                min_date = datetime.strptime(min_date_str, '%Y-%m-%d')
+            except:
+                context['code']    = 400
+                context['message'] = "Invalid Date Format"
+                return JsonResponse(context)
+
+
             chats = chats.filter(created_at__gte=min_date)
 
         for chat in chats:
