@@ -114,7 +114,7 @@ class ChatsView(AuthMixin, APIView):
                     'message'   : last_message.message,
                     'created_at': last_message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                     'deleted'   : last_message.deleted,
-                },
+                } if last_message is not None else {},
             })
 
         context['code'] = 200
