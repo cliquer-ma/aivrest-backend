@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class LiveChatConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.room_id: Optional[str] = None
+        self.room_id: Optional[str]         = None
         self.room_group_name: Optional[str] = None
         self.user = None
 
@@ -42,25 +42,13 @@ class LiveChatConsumer(WebsocketConsumer):
         try:
             # Get room reference from URL
             self.room_id = self.scope["url_route"]["kwargs"].get("reference")
+
             if not self.room_id:
                 self.close(code=4000)  # Custom close code for invalid room
                 return
-
-            # Get user from scope if authenticated
-            self.user = self.scope.get('user')
             
             # Verify room exists and user has access
             LiveChatRoom = apps.get_model("livechat", "LiveChatRoom")
-            try:
-                room = LiveChatRoom.objects.get(reference=self.room_id)
-                if self.user and self.user.id not in room.users:
-                    logger.warning(f"User {self.user.id} not authorized for room {self.room_id}")
-                    self.close(code=4001)  # Custom close code for unauthorized
-                    return
-            except ObjectDoesNotExist:
-                logger.warning(f"Room not found: {self.room_id}")
-                self.close(code=4004)  # Custom close code for not found
-                return
 
             self.room_group_name = f"livechat_{self.room_id}"
 
@@ -68,7 +56,6 @@ class LiveChatConsumer(WebsocketConsumer):
             async_to_sync(self.channel_layer.group_add)(
                 self.room_group_name, self.channel_name
             )
-            logger.info(f"User {getattr(self.user, 'id', 'anonymous')} connected to room {self.room_id}")
             self.accept()
 
         except Exception as e:
@@ -81,7 +68,6 @@ class LiveChatConsumer(WebsocketConsumer):
                 async_to_sync(self.channel_layer.group_discard)(
                     self.room_group_name, self.channel_name
                 )
-                logger.info(f"User {getattr(self.user, 'id', 'anonymous')} disconnected from room {self.room_id}")
             except Exception as e:
                 logger.exception(f"Error during WebSocket disconnect: {str(e)}")
 

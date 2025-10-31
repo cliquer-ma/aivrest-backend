@@ -5,5 +5,5 @@ from livechat.consumers import (
 )
 
 websocket_urlpatterns = [
-    path("ws/live-chat/<str:reference>/",            LiveChatConsumer.as_asgi()),
+    path("ws/live-chat/<str:reference>/<str:user_id>/",            LiveChatConsumer.as_asgi()),
 ]
