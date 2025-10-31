@@ -558,15 +558,29 @@ class CreatePostView(AuthMixin, APIView):
     
     def upload_base64_to_cloudinary(self, base64_data, folder='posts'):
         try:
-            if ';base64,' in base64_data:
-                format, imgstr = base64_data.split(';base64,') 
-                ext = format.split('/')[-1]
+            # Handle different base64 string formats
+            if isinstance(base64_data, str):
+                if ';base64,' in base64_data:
+                    # Handle data URL format: data:image/png;base64,...
+                    header, imgstr = base64_data.split(';base64,', 1)
+                    # Extract file extension from the content type
+                    if '/' in header:
+                        ext = header.split('/')[-1].lower()
+                    else:
+                        ext = 'jpg'  # Default extension if not specified
+                else:
+                    # Handle raw base64 string
+                    imgstr = base64_data
+                    ext = 'jpg'  # Default extension if not specified
+                
+                # Decode the base64 string
+                image_data = base64.b64decode(imgstr)
             else:
-                imgstr = base64_data
-                ext = 'jpg'  # default extension if not specified
-            
-            # Decode the base64 string
-            image_data = base64.b64decode(imgstr)
+                # If it's already bytes, use it directly
+                image_data = base64_data
+                ext = 'jpg'  # Default extension if not specified
+                
+            # Generate a unique filename with the appropriate extension
             filename = f"{uuid.uuid4()}.{ext}"
             
             # Upload to Cloudinary
