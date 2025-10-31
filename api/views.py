@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.conf import settings
 from django.db.models import Q
+from django.db import models
+from django.db.models import OuterRef, Subquery
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -83,7 +85,7 @@ class ChatsView(AuthMixin, APIView):
 
         try:
             min_date = datetime.strptime(min_date_str, '%Y-%m-%d')
-        except ValueError:
+        except:
             context['code']    = 400
             context['message'] = "Invalid Date Format"
             return JsonResponse(context)
@@ -564,14 +566,38 @@ class RoomsView(AuthMixin, APIView):
             context['message'] = "Invalid parameters"
             return JsonResponse(context)
 
-        rooms = LiveChatRoom.objects.filter(users__contains=[user_id])
-        rooms_data = []
+        # Get the latest message for each room
+        latest_messages = LiveChatMessage.objects.filter(
+            room=OuterRef('pk')
+        ).order_by('-created_at')
+        
+        # Get rooms with their latest message
+        rooms = LiveChatRoom.objects.filter(
+            users__contains=[user_id]
+        ).annotate(
+            last_message_content=Subquery(latest_messages.values('content')[:1]),
+            last_message_created=Subquery(latest_messages.values('created_at')[:1]),
+            last_message_type=Subquery(latest_messages.values('message_type__reference')[:1]),
+            last_message_sender=Subquery(latest_messages.values('from_user')[:1])
+        )
 
+        rooms_data = []
         for room in rooms:
-            rooms_data.append({
-                'id'            : room.reference,
-                'users'         : room.users,
-            })
+            room_data = {
+                'id': room.reference,
+                'users': room.users,
+            }
+            
+            # Add last message data if exists
+            if room.last_message_content is not None:
+                room_data['last_message'] = {
+                    'content': room.last_message_content,
+                    'created_at': room.last_message_created.isoformat() if room.last_message_created else None,
+                    'message_type': room.last_message_type,
+                    'from_user': room.last_message_sender
+                }
+            
+            rooms_data.append(room_data)
 
         context['code'] = 200
         context['data'] = {
@@ -599,6 +625,7 @@ class CreateRoomView(AuthMixin, APIView):
         context['code'] = 200
         context['data'] = {
             'room'          : {'id': room.reference}
+            'users'         : room.users,
         }
         return JsonResponse(context)
 
@@ -622,8 +649,8 @@ class RoomView(AuthMixin, APIView):
             context['message'] = "Room not found"
             return JsonResponse(context)
 
-        messages = LiveChatMessage.objects.filter(room=room)
-        messages_data = []
+        messages        = LiveChatMessage.objects.filter(room=room).order_by('-created_at')
+        messages_data   = []
 
         for message in messages:
             messages_data.append({
