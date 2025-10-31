@@ -4,6 +4,10 @@ from core.models import (
     BaseModel,
 )
 
+from core.utils import (
+    generate_reference
+)
+
 
 class ProgramType(BaseModel):
     label = models.CharField(max_length=255)
