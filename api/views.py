@@ -594,6 +594,8 @@ class CreatePostView(AuthMixin, APIView):
         content = request.POST.get('content', None)
         base64_attachments = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
 
+        print(request.POST)
+        print('x***'*20)
         print( base64_attachments )
         print('x***'*20)
 
