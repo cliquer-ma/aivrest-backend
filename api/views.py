@@ -380,7 +380,7 @@ class PostView(AuthMixin, APIView):
             context['code']    = 400
             context['message'] = "Invalid parameters"
             return JsonResponse(context)
-            
+                        
         post = Post.objects.filter(reference=post_id).first()
 
         if post is None:
@@ -547,23 +547,75 @@ class CommentPostView(AuthMixin, APIView):
 
 class CreatePostView(AuthMixin, APIView):
     endpoint = '/api/create-post'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Configure Cloudinary
+        cloudinary.config(
+            cloud_base64_attachmentsLOUDINARY_CLOUD_NAME,
+            api_key=settings.CLOUDINARY_API_KEY,
+            api_secret=settings.CLOUDINARY_API_SECRET
+        )
+    
+    def upload_base64_to_cloudinary(self, base64_data, folder='posts'):
+        try:
+            if ';base64,' in base64_data:
+                format, imgstr = base64_data.split(';base64,') 
+                ext = format.split('/')[-1]
+            else:
+                imgstr = base64_data
+                ext = 'jpg'  # default extension if not specified
+            
+            # Decode the base64 string
+            image_data = base64.b64decode(imgstr)
+            filename = f"{uuid.uuid4()}.{ext}"
+            
+            # Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                image_data,
+                folder=folder,
+                public_id=filename,
+                resource_type='auto'
+            )
+            
+            return {
+                'url': result.get('secure_url'),
+                'public_id': result.get('public_id'),
+                'format': result.get('format')
+            }
+            
+        except Exception as e:
+            print(f"Error uploading to Cloudinary: {str(e)}")
+            return None
+    
     def post(self, request, format=None):
         context = {}
 
         user_id = request.POST.get('user_id', None)
         content = request.POST.get('content', None)
-        attachment_urls = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
+        base64_attachments = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
 
         if not user_id or not content:
             context['code'] = 400
             context['message'] = "User ID and content are required"
             return JsonResponse(context, status=400)
 
+        # Process attachments
+        attachment_urls = []
+        if base64_attachments:
+            for base64_data in base64_attachments:
+                if not base64_data:
+                    continue
+                    
+                # Upload to Cloudinary
+                upload_result = self.upload_base64_to_cloudinary(base64_data)
+                if upload_result:
+                    attachment_urls.append(upload_result['url'])
+        
         # Create the post with attachment URLs as a comma-separated string
         post = Post.objects.create(
             user=user_id,
             content=content,
-            attachements = attachment_urls
+            attachements=attachment_urls
         )
 
         context['code'] = 200
@@ -573,7 +625,6 @@ class CreatePostView(AuthMixin, APIView):
                 'attachments': attachment_urls
             }
         }
-        return JsonResponse(context)
         return JsonResponse(context)
 
 
