@@ -624,7 +624,7 @@ class CreateRoomView(AuthMixin, APIView):
 
         context['code'] = 200
         context['data'] = {
-            'room'          : {'id': room.reference}
+            'room'          : {'id': room.reference},
             'users'         : room.users,
         }
         return JsonResponse(context)
