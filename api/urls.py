@@ -16,6 +16,10 @@ from api.views import (
     PostCommentsView,
     TogglePostLikeView,
     CommentPostView,
+    
+    RoomsView,
+    CreateRoomView,
+    RoomView,
 )
 
 urlpatterns = [
@@ -34,5 +38,10 @@ urlpatterns = [
     path('radon/post-comments/',        PostCommentsView.as_view(),         name='api_post_comments'),
     path('radon/toggle-post-like/',     TogglePostLikeView.as_view(),       name='api_toggle_post_like'),
     path('radon/comment-post/',         CommentPostView.as_view(),          name='api_comment_post'),
+    
+    # Room related endpoints
+    path('krypton/rooms/',              RoomsView.as_view(),                name='api_rooms'),
+    path('krypton/create-room/',        CreateRoomView.as_view(),           name='api_create_room'),
+    path('krypton/room/',               RoomView.as_view(),                 name='api_room'),
 ]
 

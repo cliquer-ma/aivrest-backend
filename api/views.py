@@ -30,6 +30,12 @@ from posts.models import (
     PostComment
 )
 
+from livechat.models import (
+    LiveChatRoom,
+    LiveChatMessageType,
+    LiveChatMessage
+)
+
 from core.ai_fitness_coach import (
     AIFitnessCoach
 )
@@ -544,3 +550,96 @@ class CreatePostView(AuthMixin, APIView):
         }
         return JsonResponse(context)
 
+
+class RoomsView(AuthMixin, APIView):
+    endpoint = '/api/rooms'
+    def get(self, request, format=None):
+        context          = {}
+        # api_key          = self.api_key
+
+        user_id         = request.GET.get('user_id', None)
+
+        if not user_id:
+            context['code']    = 400
+            context['message'] = "Invalid parameters"
+            return JsonResponse(context)
+
+        rooms = LiveChatRoom.objects.filter(users__contains=[user_id])
+        rooms_data = []
+
+        for room in rooms:
+            rooms_data.append({
+                'id'            : room.reference,
+                'users'         : room.users,
+            })
+
+        context['code'] = 200
+        context['data'] = {
+            'user'   : {'id': user_id},
+            'rooms'  : rooms_data
+        }
+        return JsonResponse(context)
+
+class CreateRoomView(AuthMixin, APIView):
+    endpoint = '/api/create-room'
+    def post(self, request, format=None):
+        context          = {}
+        # api_key          = self.api_key
+
+        user_id         = request.POST.get('user_id', None)
+        user_id2        = request.POST.get('user_id2', None)
+
+        if not user_id or not user_id2:
+            context['code']    = 400
+            context['message'] = "Invalid parameters"
+            return JsonResponse(context)
+
+        room = LiveChatRoom.objects.create(users=[user_id, user_id2])
+
+        context['code'] = 200
+        context['data'] = {
+            'room'          : {'id': room.reference}
+        }
+        return JsonResponse(context)
+
+class RoomView(AuthMixin, APIView):
+    endpoint = '/api/room'
+    def get(self, request, format=None):
+        context          = {}
+        # api_key          = self.api_key
+
+        room_id         = request.GET.get('room_id', None)
+
+        if not room_id:
+            context['code']    = 400
+            context['message'] = "Invalid parameters"
+            return JsonResponse(context)
+
+        room = LiveChatRoom.objects.filter(reference=room_id).first()
+
+        if room is None:
+            context['code']    = 400
+            context['message'] = "Room not found"
+            return JsonResponse(context)
+
+        messages = LiveChatMessage.objects.filter(room=room)
+        messages_data = []
+
+        for message in messages:
+            messages_data.append({
+                'id'            : message.reference,
+                'message_type'  : {
+                    'id'        : message.message_type.reference,
+                    'label'     : message.message_type.label,
+                },
+                'from_user'     : message.from_user,
+                'to_user'       : message.to_user,
+                'content'       : message.content,
+            })
+
+        context['code'] = 200
+        context['data'] = {
+            'room'          : {'id': room.reference},
+            'messages'      : messages_data
+        }
+        return JsonResponse(context)

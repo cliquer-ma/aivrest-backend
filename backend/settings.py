@@ -116,7 +116,8 @@ INSTALLED_APPS                      = [
     'agents.apps.AgentsConfig',
     'programs.apps.ProgramsConfig',
     'posts.apps.PostsConfig',
-    'competitions.apps.CompetitionsConfig'
+    'competitions.apps.CompetitionsConfig',
+    'livechat.apps.LivechatConfig'
 ]
 
 MIDDLEWARE                          = [
@@ -133,3 +134,13 @@ MIDDLEWARE                          = [
     'core.middleware.UserAgentMiddleware',
     'core.middleware.NoCacheMiddleware',
 ]
+
+
+CHANNEL_LAYERS                      = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [CELERY_BROKER_URL],
+        },
+    },
+}
