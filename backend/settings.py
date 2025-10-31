@@ -144,3 +144,9 @@ CHANNEL_LAYERS                      = {
         },
     },
 }
+
+# settings.py
+CLOUDINARY_CLOUD_NAME = 'dfibistkg'
+CLOUDINARY_API_KEY = '559796284768587'
+CLOUDINARY_API_SECRET = "q2KZ6WszNtFvmu7Oewb6qM_vWoM"
+

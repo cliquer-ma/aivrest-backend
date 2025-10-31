@@ -1,4 +1,7 @@
 from pickle import NONE
+import base64
+import os
+import uuid
 from django.http import JsonResponse
 from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
@@ -6,6 +9,9 @@ from django.conf import settings
 from django.db.models import Q
 from django.db import models
 from django.db.models import OuterRef, Subquery
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -42,11 +48,18 @@ from core.ai_fitness_coach import (
     AIFitnessCoach
 )
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 from phonenumbers import geocoder, parse
 from datetime import datetime
 import requests
 import json
 
+import base64
+import os
+import uuid
 
 ai_fitness_coach = AIFitnessCoach(api_key=settings.GEMINI_API_KEY)
 
@@ -534,25 +547,89 @@ class CommentPostView(AuthMixin, APIView):
 
 class CreatePostView(AuthMixin, APIView):
     endpoint = '/api/create-post'
-    def post(self, request, format=None):
-        context          = {}
-        # api_key          = self.api_key
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Configure Cloudinary
+        cloudinary.config(
+            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+            api_key=settings.CLOUDINARY_API_KEY,
+            api_secret=settings.CLOUDINARY_API_SECRET
+        )
+    
+    def upload_base64_to_cloudinary(self, base64_data, folder='posts'):
+        try:
+            # Check if the base64 string has a data URL prefix
+            if ';base64,' in base64_data:
+                format, imgstr = base64_data.split(';base64,') 
+                ext = format.split('/')[-1]
+            else:
+                imgstr = base64_data
+                ext = 'jpg'  # default extension if not specified
+            
+            # Decode the base64 string
+            image_data = base64.b64decode(imgstr)
+            
+            # Generate a unique filename
+            filename = f"{uuid.uuid4()}.{ext}"
 
-        user_id         = request.POST.get('user_id', None)
-        content         = request.POST.get('content', None)
-        attachements    = request.POST.get('attachements', None)
+            # Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                image_data,
+                folder=folder,
+                public_id=filename,
+                resource_type='auto'
+            )
+            
+            return {
+                'url': result.get('secure_url'),
+                'public_id': result.get('public_id'),
+                'format': result.get('format')
+            }
+            
+        except Exception as e:
+            print(f"Error uploading to Cloudinary: {str(e)}")
+            return None
+    
+    def post(self, request, format=None):
+        context = {}
+
+        user_id = request.POST.get('user_id', None)
+        content = request.POST.get('content', None)
+        base64_attachments = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
 
         if not user_id or not content:
-            context['code']    = 400
-            context['message'] = "Invalid parameters"
-            return JsonResponse(context)
+            context['code'] = 400
+            context['message'] = "User ID and content are required"
+            return JsonResponse(context, status=400)
 
-        post = Post.objects.create(user=user_id, content=content, attachements=attachements)
+        # Process attachments
+        attachment_urls = []
+        if base64_attachments:
+            for base64_data in base64_attachments:
+                if not base64_data:
+                    continue
+                    
+                # Upload to Cloudinary
+                upload_result = self.upload_base64_to_cloudinary(base64_data)
+                if upload_result:
+                    attachment_urls.append(upload_result['url'])
+        
+        # Create the post with attachment URLs as a comma-separated string
+        post = Post.objects.create(
+            user=user_id,
+            content=content,
+            attachements = attachment_urls
+        )
 
         context['code'] = 200
         context['data'] = {
-            'post'          : {'id': post.reference}
+            'post': {
+                'id': post.reference,
+                'attachments': attachment_urls
+            }
         }
+        return JsonResponse(context)
         return JsonResponse(context)
 
 
