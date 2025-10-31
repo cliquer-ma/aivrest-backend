@@ -551,7 +551,7 @@ class CreatePostView(AuthMixin, APIView):
         super().__init__(*args, **kwargs)
         # Configure Cloudinary
         cloudinary.config(
-            cloud_base64_attachmentsLOUDINARY_CLOUD_NAME,
+            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
             api_key=settings.CLOUDINARY_API_KEY,
             api_secret=settings.CLOUDINARY_API_SECRET
         )
@@ -594,9 +594,22 @@ class CreatePostView(AuthMixin, APIView):
         content = request.POST.get('content', None)
         base64_attachments = request.POST.getlist('attachments[]')  # Expecting a list of base64 strings
 
+        print( base64_attachments )
+        print('x***'*20)
+
         if not user_id or not content:
             context['code'] = 400
             context['message'] = "User ID and content are required"
+            return JsonResponse(context, status=400)
+
+        if not base64_attachments:
+            context['code'] = 400
+            context['message'] = "Attachments are required"
+            return JsonResponse(context, status=400)
+
+        if not isinstance(base64_attachments, list):
+            context['code'] = 400
+            context['message'] = "Attachments must be a list"
             return JsonResponse(context, status=400)
 
         # Process attachments
