@@ -146,12 +146,12 @@ class AIFitnessCoach:
             return None
 
 
-    def _call_chat_agent(self, message: str, messages_history: list):
+    def _call_chat_agent(self, message: str, messages_history: list, user_profile: dict):
 
         json_content = {
             'last_user_message'     : message,
             'messages_history'      : messages_history,
-            # 'user_profile'          : profile,
+            'user_profile'          : user_profile,
             # 'explanation_message'   : explanation_message,
             # 'conversational_style'  : self.CONVERSATIONAL_STYLE,
             # 'threshold_met'         : threshold_met,
@@ -165,14 +165,14 @@ class AIFitnessCoach:
 
         return None
 
-    def process_user_message(self, message: str, messages_history: list):
+    def process_user_message(self, message: str, messages_history: list, user_profile: dict):
         # self.user_profile                       = self._call_profiler_agent(message, self.user_profile)
         # self.user_profile, explanation_message  = self._call_validator_agent(self.user_profile)
         # self.quality_score                      = self._calculate_quality_score()
         # self.threshold_met                      = self.quality_score >= self.MIN_SCORE_THRESHOLD
 
         # new_message                               = self._call_chat_agent(message, self.user_profile, explanation_message, self.threshold_met, program_generation_starting)
-        new_message                               = self._call_chat_agent(message, messages_history)
+        new_message                               = self._call_chat_agent(message, messages_history, user_profile)
 
         if new_message is None:
             default_fallback_message = "Je suis désolé, je ne comprends pas votre message."

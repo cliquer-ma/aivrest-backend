@@ -63,6 +63,161 @@ import uuid
 
 ai_fitness_coach = AIFitnessCoach(api_key=settings.GEMINI_API_KEY)
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+import json
+import tempfile
+import os
+
+# Firebase credentials
+FIREBASE_PROJECT_ID = "revolusport-89884"
+FIREBASE_PRIVATE_KEY_ID = "84597f40da01a6baa15e08482dfe86c70c401358"
+FIREBASE_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC53whIovqeflIH
+UuDk7wJ+yM1eqHtLcRlgQv4Z6wDJ9E1qxpjQT/1rKx7/ZWFYwwLSAd8CuakIZUcU
+07oxYFYyKGyxHgtbluPgqsw98uBJALTntjQpEZ6BDCjnabQiV2JJb5gupDaTNGc+
+RZoeXNNxzSS+p/0llqiUh9aT2W5ATSaBixIb/CkOvaHZ00w18Q81053RNfMv8UfX
+S3xyHK9HwwJKBsv8t+Lq8GiIj1ag9ObD6khrkvAdeXZxgBjcwP3Zrt2pw2gVIqyB
+rzNPNdO/iTvMF41P2617iF/CmiQ2JRrxBWQcnvNLh6hW/XESuN7ChuBT58+2O2Pv
+vMLN23HnAgMBAAECggEAMhCRpiMEF3HV/XQE8JUyWl0S+DawcxslJykUUX3bqgoc
+WjDhE2cgTuAACvHPPT3VwiRP4eeJUKIa+dCn28njncIGuNRrYcGsYqUOu3byk6dV
+kv4gYZmF1KOmVuLBauiXqEkfOBzyOEdKsdrEjv4Y1BPaHGKaTKgeg1dtZEiSKk5H
+zBlEFsed6wOq1uSxeUs7/TAOoeP4LrBQXImTp1uU0asHqfcVhHIRahWLhackYu+h
+ACyZ4EefXt4zNObkWNWl6oNfhGch2Mv965HKulBxf8DUva1p56Xgzqg1qhKFNYEp
+5xGpjkUQeFlzD9otPC/vwuPcQqWYscGtf/5jc65pOQKBgQDqOf1Cl+4Nip16nhaW
+hw8kSom9FGsO5YAdYVBJ94AK8Za/dFwQAgKFNAoBfkrVX3USZQpDO6EK5SjrTp8k
+yg6tfcNVPQJUFt1qI2JSq4WZnr7Jddm1vERU+vd13zWMeKEIpvgVqzsEc/O3r6N8
+/JqCNOCrqFTd59LCf7sLy1nkSQKBgQDLJk6HDhHLoP2w32/83gplfEudDnXOa0+z
+ias6s+CtKjJ6SoWjT4fS7vksjqBywKWo0shLP8YpbmKRkuC0CQnECJJdn/WUZY65
+ZsfwViSF2w85LwDugsdvhiCeU+X2dgWdF/mWwHnxntqNcnN/cKGt/i88HBdjXiu7
+b/5qmp1ErwKBgCPwkfPN7DEXu+I8r6qZPrGK3mes4mB+xpG7hN5Uo8kKGN93s0ih
+hlF6Eq73+fOTmhsgddqrI6LQVt8ESVcTyfzE91v06I6Ok5rdoxCcUPupaAzxkF5a
+bQG9IIttnIHZYJw7QoXQqFWelR7yTFu5RtwD0RWF1r/V+njtsH22zixBAoGAQlj0
+dK9nqHWf5VBUJuXtx09c8qJyX0Q095IS1k1BJ80MR1xnYPrshTt/Lco3JMM+V3Df
+8ZOWiJmAn8K0mJgLFHcoNmOztQ+mGW80BY5cx0rQIgDz8PHNaOMJbCxCgsfw9WmL
+Hm0mZn9XKbMjfY+vfj/x9VPHX7C137WoBfERRAkCgYEAmW3wfuuj4dDcJnNjrUZm
+7GDlwka+IxbRplbI7VTulVhu/3JP6kqKcclv13LV9vIeXs+5yCCKLppdNMDfvU8R
+Q9eE45zCQCdzMKNnNhNAYDiZ2/KMR+6nlhBHuGuKuteehRCB7rnS1y1dIXt/TO2k
+CjsyCF53oTDsSDWBf3ZEmVg=
+-----END PRIVATE KEY-----"""
+FIREBASE_CLIENT_EMAIL = "firebase-adminsdk-mekbl@revolusport-89884.iam.gserviceaccount.com"
+FIREBASE_CLIENT_ID = "107131551580705863631"
+FIREBASE_CLIENT_CERT_URL = "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-mekbl%40revolusport-89884.iam.gserviceaccount.com"
+
+# Global database instance
+db = None
+
+def get_firebase_db():
+    global db
+    if db is None:
+        try:
+            print("🔑 Using Firebase credentials directly")
+            
+            firebase_credentials = {
+                "type": "service_account",
+                "project_id": FIREBASE_PROJECT_ID,
+                "private_key_id": FIREBASE_PRIVATE_KEY_ID,
+                "private_key": FIREBASE_PRIVATE_KEY,
+                "client_email": FIREBASE_CLIENT_EMAIL,
+                "client_id": FIREBASE_CLIENT_ID,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": FIREBASE_CLIENT_CERT_URL,
+                "universe_domain": "googleapis.com"
+            }
+            
+            print("🔍 Firebase credentials check:")
+            print(f"  project_id: {'SET' if firebase_credentials['project_id'] else 'NOT SET'}")
+            print(f"  private_key: {'SET' if firebase_credentials['private_key'] else 'NOT SET'}")
+            print(f"  client_email: {'SET' if firebase_credentials['client_email'] else 'NOT SET'}")
+            
+            missing_vars = []
+            if not firebase_credentials["project_id"]:
+                missing_vars.append("FIREBASE_PROJECT_ID")
+            if not firebase_credentials["private_key"]:
+                missing_vars.append("FIREBASE_PRIVATE_KEY")
+            if not firebase_credentials["client_email"]:
+                missing_vars.append("FIREBASE_CLIENT_EMAIL")
+                
+            if missing_vars:
+                print(f"⚠️  Firebase core credentials missing: {', '.join(missing_vars)}")
+                db = None
+                return db
+
+            print("🔧 Initializing Firebase with credentials...")
+            try:
+                cred = credentials.Certificate(firebase_credentials)
+                if not firebase_admin._apps:
+                    firebase_admin.initialize_app(cred)
+                db = firestore.client()
+                print(f"✅ Firebase initialized successfully")
+            except Exception as firebase_error:
+                print(f"⚠️ Direct credentials failed, trying temporary file approach: {firebase_error}")
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                    json.dump(firebase_credentials, temp_file, indent=2)
+                    temp_file_path = temp_file.name
+                
+                try:
+                    cred = credentials.Certificate(temp_file_path)
+                    if not firebase_admin._apps:
+                        firebase_admin.initialize_app(cred)
+                    db = firestore.client()
+                    print(f"✅ Firebase initialized successfully with temporary file")
+                    os.unlink(temp_file_path)
+                except Exception as temp_error:
+                    print(f"❌ Temporary file approach also failed: {temp_error}")
+                    try:
+                        if not firebase_admin._apps:
+                            firebase_admin.initialize_app()
+                        db = firestore.client()
+                        print(f"✅ Firebase initialized with default credentials")
+                    except Exception as default_error:
+                        print(f"❌ Default credentials failed: {default_error}")
+                        db = None
+        except Exception as e:
+            print(f"❌ Firebase initialization failed: {str(e)}")
+            import traceback
+            print(f"❌ Full error traceback: {traceback.format_exc()}")
+            db = None
+    return db
+
+def get_user_profile(user_id: str) -> dict:
+    try:
+
+        profile_ref = get_firebase_db().collection(f"users/{user_id}/userDetails").document("profile")
+        profile = profile_ref.get()
+
+        user_ref = get_firebase_db().collection("users").document(user_id)
+        user_doc = user_ref.get()
+
+        if profile.exists and user_doc.exists:
+            profile_data = profile.to_dict()
+            user_data = user_doc.to_dict()
+        
+            combined_data = {
+                **profile_data,
+                "full_name": user_data.get("fullname", ""),
+                "hasCompletedProfile": user_data.get("hasCompletedProfile", False)
+            }
+            
+            print(f"User profile and full name retrieved for user {user_id}")
+            return combined_data
+        elif profile.exists:
+            print(f"Only profile found for user {user_id}, full name missing")
+            return profile.to_dict()
+        elif user_doc.exists:
+            print(f"Only full name found for user {user_id}, profile missing")
+            return {"full_name": user_doc.to_dict().get("fullname", "")}
+        else:
+            print(f"No profile or full name found for user {user_id}")
+            return {}
+    except Exception as e:
+        print(f"Error retrieving user profile for {user_id}: {str(e)}")
+        return {}
+
+
 class AuthMixin:
     def dispatch(self, request, *args, **kwargs):
 
@@ -163,12 +318,25 @@ class ChatView(AuthMixin, APIView):
             return JsonResponse(context)
 
         chat_history    = chat.get_messages_ai_formatted()
+        user_profile    = get_user_profile(user_id)
+        user_profile    = {
+            'mainSport': user_profile.get('mainSport', ''),
+            'objective': user_profile.get('objective', ''),
+            'sportLevel': user_profile.get('sportLevel', ''),
+            'age'       : user_profile.get('age', ''),
+            'dietaryHabits' : user_profile.get('dietaryHabits', ''),
+            'sportPractice' : user_profile.get('sportPractice', ''),
+            'height'    : user_profile.get('height', '') + ' cm',
+            'weight'    : user_profile.get('weight', '') + ' kg',
+            'gender'    : user_profile.get('gender', ''),
+            'activity_level': user_profile.get('activity_level', ''),
+        }
 
         message_type    = ChatMessageType.objects.filter(reference='direct_question').first()
         user_message    = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
 
         chat_agent      = Agent.objects.filter(reference='chat_agent').last()
-        new_message     = ai_fitness_coach.process_user_message(user_message.message, chat_history)
+        new_message     = ai_fitness_coach.process_user_message(user_message.message, chat_history, user_profile)
 
         message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
         agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
