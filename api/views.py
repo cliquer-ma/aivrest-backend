@@ -347,8 +347,8 @@ class ChatView(AuthMixin, APIView):
             'age'       : user_profile.get('age', ''),
             'dietaryHabits' : user_profile.get('dietaryHabits', ''),
             'sportPractice' : user_profile.get('sportPractice', ''),
-            'height'    : user_profile.get('height', '') + ' cm',
-            'weight'    : user_profile.get('weight', '') + ' kg',
+            'height'    : str(user_profile.get('height', '')) + ' cm',
+            'weight'    : str(user_profile.get('weight', '')) + ' kg',
             'gender'    : user_profile.get('gender', ''),
             'activity_level': user_profile.get('activity_level', ''),
         }

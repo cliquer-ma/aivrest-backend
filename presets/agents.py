@@ -14,7 +14,7 @@ from presets.instructions import (
 AGENTS = {
     'profiler_agent': {
         'model'                 : 'gemini-flash-latest',
-        'thinking_budget'       : -1,
+        'thinking_budget'       : 0,
         'response_mime_type'    : 'application/json',
         'system_instructions'   : PROFILE_AGENT_SYSTEM_INSTRUCTIONS,
         'genai_response_schema' : genai.types.Schema(
