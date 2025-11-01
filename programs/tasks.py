@@ -8,12 +8,13 @@ from datetime import datetime, timedelta
 
 import requests
 
-from core.ai_fitness_coach import AIFitnessCoach
-
-from api.views import _save_program_to_firebase
+from programs.models import (
+    Program,
+    ProgramType
+)
 
 @shared_task
-def generate_workout_plan(ai_coach: AIFitnessCoach, user_id: str, messages_history: list, user_profile: dict):
+def generate_workout_plan(ai_coach, user_id: str, messages_history: list, user_profile: dict):
 
 
     json_content = {
@@ -35,5 +36,13 @@ def generate_workout_plan(ai_coach: AIFitnessCoach, user_id: str, messages_histo
         }
         print(f"✅ Workout plan generated: {program_title}")
 
-        _save_program_to_firebase("sport", workout_plan, user_id)
+        # _save_program_to_firebase("sport", workout_plan, user_id)
+
+        Program.objects.create(
+            user          = user_id,
+            program_type  = "sport",
+            title         = program_title,
+            content       = weekly_schedule,
+        )
+
         return True

@@ -16,7 +16,7 @@ class ProgramType(BaseModel):
 
 class Program(BaseModel):
     user          = models.TextField()
-    program_type  = models.ForeignKey('programs.ProgramType', on_delete=models.CASCADE)
+    program_type  = models.CharField(max_length=255)
     title         = models.CharField(max_length=255)
     content       = models.JSONField(default=list)
     duration_days = models.IntegerField(default=0)

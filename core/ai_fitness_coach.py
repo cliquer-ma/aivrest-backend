@@ -188,7 +188,7 @@ class AIFitnessCoach:
 
         return True
 
-    def process_user_message(self, message: str, messages_history: list, user_profile: dict):
+    def process_user_message(self, message: str, messages_history: list, user_profile: dict, user_id: str):
 
         self.user_profile       = user_profile
         user_profile            = self._call_profiler_agent(message, messages_history, user_profile)
@@ -200,8 +200,8 @@ class AIFitnessCoach:
         self.threshold_met      = self.quality_score >= self.MIN_SCORE_THRESHOLD
         new_message             = self._call_chat_agent(message, messages_history, user_profile, self.threshold_met)
 
-        # if self.threshold_met:
-        #     self._call_workout_architect(user_profile.get('user_id'), messages_history, user_profile)
+        if self.threshold_met:
+            self._call_workout_architect(user_id, messages_history, user_profile)
 
         if new_message is not None:
             return new_message
