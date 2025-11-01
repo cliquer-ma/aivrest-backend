@@ -344,8 +344,8 @@ class PostsView(AuthMixin, APIView):
 
         posts           = Post.objects.filter(deleted=False).order_by('-created_at')
 
-        if user_id is not None:
-            posts = posts.filter(user=user_id)
+        # if user_id is not None:
+        #     posts = posts.filter(user=user_id)
 
         posts_data      = []
 
@@ -651,7 +651,7 @@ class CreatePostView(AuthMixin, APIView):
         context['data'] = {
             'post': {
                 'id': post.reference,
-                'attachments': attachment_urls
+                'attachements': attachment_urls
             }
         }
         return JsonResponse(context)
