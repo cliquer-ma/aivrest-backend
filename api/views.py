@@ -218,6 +218,27 @@ def get_user_profile(user_id: str) -> dict:
         return {}
 
 
+def update_user_profile_fields(user_id: str, updated_fields: dict):
+    try:
+        firebase_db = get_firebase_db()
+        if firebase_db is None:
+            print("⚠️  Firebase not available")
+            return
+        user_doc_ref = firebase_db.collection("users").document(user_id).collection("userDetails").document("profile")
+
+        
+        doc_snapshot = user_doc_ref.get()
+
+        if doc_snapshot.exists:
+            user_doc_ref.update(updated_fields)
+            print(f"[UPDATE] Mise à jour partielle du profil pour {user_id} avec : {updated_fields}")
+        else:
+            user_doc_ref.set(updated_fields)
+            print(f"[CREATE] Nouveau profil créé pour {user_id} avec : {updated_fields}")
+    except Exception as e:
+        print(f"[Firestore]  Erreur mise à jour/création du profil utilisateur {user_id} : {str(e)}")
+
+
 class AuthMixin:
     def dispatch(self, request, *args, **kwargs):
 
@@ -340,6 +361,8 @@ class ChatView(AuthMixin, APIView):
 
         message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
         agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
+
+        update_user_profile_fields(user_id, ai_fitness_coach.user_profile)
 
         context['code'] = 200
         context['data'] = {

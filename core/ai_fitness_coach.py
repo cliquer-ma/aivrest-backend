@@ -16,7 +16,7 @@ from presets.agents import (
 
 class AIFitnessCoach:
 
-    def __init__(self, api_key: str, min_score_threshold=50, conversational_style=75, sarcasm_level=1):
+    def __init__(self, api_key: str, min_score_threshold=75, conversational_style=75, sarcasm_level=1):
 
         if not api_key:
             raise ValueError("API key is required to initialize the AIFitnessCoach.")
@@ -146,7 +146,22 @@ class AIFitnessCoach:
             return None
 
 
-    def _call_chat_agent(self, message: str, messages_history: list, user_profile: dict):
+    def _call_profiler_agent(self, message: str, messages_history: list, user_profile: dict):
+
+        json_content    = {
+            "currentUserProfile"    : user_profile,
+            'messages_history'      : messages_history,
+            "newUserMessage"        : message
+        }
+        response_data   = self._call_agent(json_content, 'profiler_agent')
+
+        if response_data:
+            profile = response_data.get('user_profile')
+            return profile
+
+        return None
+
+    def _call_chat_agent(self, message: str, messages_history: list, user_profile: dict, threshold_met: bool):
 
         json_content = {
             'last_user_message'     : message,
@@ -154,8 +169,7 @@ class AIFitnessCoach:
             'user_profile'          : user_profile,
             # 'explanation_message'   : explanation_message,
             # 'conversational_style'  : self.CONVERSATIONAL_STYLE,
-            # 'threshold_met'         : threshold_met,
-            # 'program_generation_starting': program_generation_starting
+            'threshold_met'         : threshold_met,
         }
         response_data   = self._call_agent(json_content, 'chat_agent')
 
@@ -166,16 +180,20 @@ class AIFitnessCoach:
         return None
 
     def process_user_message(self, message: str, messages_history: list, user_profile: dict):
-        # self.user_profile                       = self._call_profiler_agent(message, self.user_profile)
-        # self.user_profile, explanation_message  = self._call_validator_agent(self.user_profile)
-        # self.quality_score                      = self._calculate_quality_score()
-        # self.threshold_met                      = self.quality_score >= self.MIN_SCORE_THRESHOLD
 
-        # new_message                               = self._call_chat_agent(message, self.user_profile, explanation_message, self.threshold_met, program_generation_starting)
-        new_message                               = self._call_chat_agent(message, messages_history, user_profile)
+        self.user_profile       = user_profile
+        user_profile            = self._call_profiler_agent(message, messages_history, user_profile)
 
-        if new_message is None:
-            default_fallback_message = "Je suis désolé, je ne comprends pas votre message."
-            return default_fallback_message
+        if user_profile is not None:
+            self.user_profile = user_profile
 
-        return new_message
+        self.quality_score      = self._calculate_quality_score()
+        self.threshold_met      = self.quality_score >= self.MIN_SCORE_THRESHOLD
+        new_message             = self._call_chat_agent(message, messages_history, user_profile, self.threshold_met)
+
+        if new_message is not None:
+            return new_message
+
+        default_fallback_message = "Je suis désolé, je ne comprends pas votre message."
+        return default_fallback_message
+
