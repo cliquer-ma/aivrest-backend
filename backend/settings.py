@@ -65,7 +65,7 @@ TOKEN_EXPIRATION_TIME               = 60 * 60 * 24  # 24 hours
 
 STRIPE_SECRET_KEY                   = os.getenv('STRIPE_SECRET_KEY')
 
-GEMINI_API_KEY                      = "AIzaSyC4uVTpS9RdUN5stUhGmm5QqSXEUZwhu-4"
+GEMINI_API_KEY                      = "AIzaSyDwoat3aP6q04-gmmantNzrr6WwHlxbplY"
 
 STATIC_URL                          = '/static/'
 STATICFILES_DIRS                    = [os.path.join(BASE_DIR, 'static_in_env')]
