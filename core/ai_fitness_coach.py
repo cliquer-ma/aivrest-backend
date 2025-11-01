@@ -14,6 +14,10 @@ from presets.agents import (
     AGENTS
 )
 
+from programs.tasks import (
+    generate_workout_plan
+)
+
 class AIFitnessCoach:
 
     def __init__(self, api_key: str, min_score_threshold=75, conversational_style=75, sarcasm_level=1):
@@ -145,7 +149,6 @@ class AIFitnessCoach:
             print(f"Error parsing response: {e}")
             return None
 
-
     def _call_profiler_agent(self, message: str, messages_history: list, user_profile: dict):
 
         json_content    = {
@@ -179,6 +182,12 @@ class AIFitnessCoach:
 
         return None
 
+    def _call_workout_architect(self, user_id, messages_history: list, user_profile: dict) -> bool:
+
+        generate_workout_plan.delay(self, user_id, messages_history, user_profile)
+
+        return True
+
     def process_user_message(self, message: str, messages_history: list, user_profile: dict):
 
         self.user_profile       = user_profile
@@ -190,6 +199,9 @@ class AIFitnessCoach:
         self.quality_score      = self._calculate_quality_score()
         self.threshold_met      = self.quality_score >= self.MIN_SCORE_THRESHOLD
         new_message             = self._call_chat_agent(message, messages_history, user_profile, self.threshold_met)
+
+        # if self.threshold_met:
+        #     self._call_workout_architect(user_profile.get('user_id'), messages_history, user_profile)
 
         if new_message is not None:
             return new_message

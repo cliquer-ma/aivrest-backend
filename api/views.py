@@ -217,8 +217,7 @@ def get_user_profile(user_id: str) -> dict:
         print(f"Error retrieving user profile for {user_id}: {str(e)}")
         return {}
 
-
-def update_user_profile_fields(user_id: str, updated_fields: dict):
+def update_user_profile(user_id: str, updated_fields: dict):
     try:
         firebase_db = get_firebase_db()
         if firebase_db is None:
@@ -238,6 +237,36 @@ def update_user_profile_fields(user_id: str, updated_fields: dict):
     except Exception as e:
         print(f"[Firestore]  Erreur mise à jour/création du profil utilisateur {user_id} : {str(e)}")
 
+def _save_program_to_firebase(self, program_type: str, program_data: dict, user_id: str):
+    try:
+        firebase_db = get_firebase_db()
+
+        if firebase_db is None:
+            print("⚠️  Firebase not available")
+            return
+        # Use shared timestamp if provided, otherwise generate new one
+        timestamp   = int(datetime.now().timestamp())
+        program_id  = f"program_{program_type}_{timestamp}"
+
+        firebase_program = {
+            "type": program_type,
+            "title": program_data.get("program_title", "Programme Personnalisé"),
+            "content": program_data,
+            "duration": self.plan_duration_weeks or 4,
+            "level": self.user_profile.get("activity_level", "intermediate"),
+            "createdAt": datetime.now().isoformat(),
+            "start_date": datetime.now().strftime("%Y-%m-%d"),
+            "status": "active"
+        }
+
+        firebase_db.collection(f"users/{user_id}/programs").document(program_id).set(firebase_program)
+        print(f"✅ Saved {program_type} program to Firebase: {program_id} for user {user_id}")
+        # TODO: Send push notification
+
+    except Exception as e:
+        print(f"❌ Error saving program to Firebase: {e}")
+        import traceback
+        print(traceback.format_exc())
 
 class AuthMixin:
     def dispatch(self, request, *args, **kwargs):
@@ -362,7 +391,7 @@ class ChatView(AuthMixin, APIView):
         message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
         agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
 
-        update_user_profile_fields(user_id, ai_fitness_coach.user_profile)
+        update_user_profile(user_id, ai_fitness_coach.user_profile)
 
         context['code'] = 200
         context['data'] = {
@@ -412,7 +441,7 @@ class ChatHistoryView(AuthMixin, APIView):
             return JsonResponse(context)
 
         messages_data = []
-        for message in chat.get_messages():
+        for message in chat.get_messaages():
             messages_data.append({
                 'id'        : message.reference,
                 'agent'     : {'id': message.agent.reference}   if message.agent is not None else None,
