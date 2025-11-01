@@ -20,7 +20,7 @@ from programs.tasks import (
 
 class AIFitnessCoach:
 
-    def __init__(self, api_key: str, min_score_threshold=75, conversational_style=75, sarcasm_level=1):
+    def __init__(self, api_key: str, min_score_threshold=65, conversational_style=75, sarcasm_level=1):
 
         if not api_key:
             raise ValueError("API key is required to initialize the AIFitnessCoach.")
