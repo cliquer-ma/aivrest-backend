@@ -367,9 +367,9 @@ class ChatView(AuthMixin, APIView):
             context['message'] = "Pending agent response"
             return JsonResponse(context)
 
-        chat_history    = chat.get_messages_ai_formatted()
-        user_profile    = get_user_profile(user_id)
-        user_profile    = {
+        chat_history        = chat.get_messages_ai_formatted()
+        user_profile        = get_user_profile(user_id)
+        user_profile        = {
             'mainSport': user_profile.get('mainSport', ''),
             'objective': user_profile.get('objective', ''),
             'sportLevel': user_profile.get('sportLevel', ''),
@@ -382,20 +382,22 @@ class ChatView(AuthMixin, APIView):
             'activity_level': user_profile.get('activity_level', ''),
         }
 
-        message_type    = ChatMessageType.objects.filter(reference='direct_question').first()
-        user_message    = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
+        message_type        = ChatMessageType.objects.filter(reference='direct_question').first()
+        user_message        = ChatMessage.objects.create(message_type=message_type, chat=chat, user=user_id, message=user_message)
 
-        chat_agent      = Agent.objects.filter(reference='chat_agent').last()
-        new_message     = ai_fitness_coach.process_user_message(user_message.message, chat_history, user_profile, user_id)
+        chat_agent          = Agent.objects.filter(reference='chat_agent').last()
+        new_message, 
+        started_generation  = ai_fitness_coach.process_user_message(user_message.message, chat_history, user_profile, user_id)
 
-        message_type    = ChatMessageType.objects.filter(reference='direct_answer').first()
-        agent_message   = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
+        message_type        = ChatMessageType.objects.filter(reference='direct_answer').first()
+        agent_message       = ChatMessage.objects.create(message_type=message_type, chat=chat, agent=chat_agent, message=new_message)
 
         update_user_profile(user_id, ai_fitness_coach.user_profile)
 
         context['code'] = 200
         context['data'] = {
             'chat'   : {'id' : chat.reference},
+            'IsGeneratingProgram': started_generation,
             'user_message'  : {
                 'id'        : user_message.reference,
                 'message'   : user_message.message,

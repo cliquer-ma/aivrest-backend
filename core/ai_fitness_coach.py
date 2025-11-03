@@ -189,6 +189,24 @@ class AIFitnessCoach:
 
         return True
 
+    def _call_nutrition_planner(self, user_id, messages_history: list, user_profile: dict) -> bool:
+
+        return True
+
+    def _call_intent_recognizer(self, message: str):
+
+        json_content    = {
+            "message"           : message,
+        }
+        response_data   = self._call_agent(json_content, 'intent_recognizer_agent')
+
+        if response_data:
+            intent = response_data.get('intent')
+            return intent
+
+        return None
+
+
     def process_user_message(self, message: str, messages_history: list, user_profile: dict, user_id: str):
 
         self.user_profile       = user_profile
@@ -197,16 +215,27 @@ class AIFitnessCoach:
         if user_profile is not None:
             self.user_profile = user_profile
 
+        intent_recognizer       = self._call_intent_recognizer(message)
+
+        print(intent_recognizer)
+
+        if intent_recognizer is not None:
+            self.intent_recognizer = intent_recognizer
+
         self.quality_score      = self._calculate_quality_score()
         self.threshold_met      = self.quality_score >= self.MIN_SCORE_THRESHOLD
+        self.min_threshold_met  = self.quality_score >= 40 and self.intent_recognizer.get('demanded_generation')
         new_message             = self._call_chat_agent(message, messages_history, user_profile, self.threshold_met)
 
-        if self.threshold_met:
+        started_generation      = self.threshold_met or self.min_threshold_met
+
+        if self.threshold_met or self.min_threshold_met:
             self._call_workout_architect(user_id, messages_history, user_profile)
 
+
         if new_message is not None:
-            return new_message
+            return new_message, started_generation
 
         default_fallback_message = "Je suis désolé, je ne comprends pas votre message."
-        return default_fallback_message
+        return default_fallback_message, started_generation
 

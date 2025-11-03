@@ -8,7 +8,8 @@ from presets.instructions import (
     WORKOUT_ARCHITECT_AGENT_SYSTEM_INSTRUCTIONS,
     NUTRITION_PLANNER_AGENT_SYSTEM_INSTRUCTIONS,
     CHAT_AGENT_SYSTEM_INSTRUCTIONS,
-    RE_ENGAGEMENT_AGENT_SYSTEM_INSTRUCTIONS
+    RE_ENGAGEMENT_AGENT_SYSTEM_INSTRUCTIONS,
+    INTENT_RECOGNIZER_SYSTEM_INSTRUCTIONS
 )
 
 AGENTS = {
@@ -210,6 +211,25 @@ AGENTS = {
                 ),
                 "explanation": genai.types.Schema(
                     type = genai.types.Type.STRING,
+                ),
+            },
+        )
+    },
+    'intent_recognizer_agent': {
+        'model'                 : 'gemini-flash-latest',
+        'thinking_budget'       : 0,
+        'response_mime_type'    : 'application/json',
+        'system_instructions'   : INTENT_RECOGNIZER_SYSTEM_INSTRUCTIONS,
+        'genai_response_schema' : genai.types.Schema(
+            type = genai.types.Type.OBJECT,
+            required = ["demanded_generation", "program_type"],
+            properties = {
+                "demanded_generation": genai.types.Schema(
+                    type = genai.types.Type.BOOLEAN,
+                ),
+                "program_type": genai.types.Schema(
+                    type = genai.types.Type.STRING,
+                    enum = ["sport", "nutrition"],
                 ),
             },
         )
