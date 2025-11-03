@@ -552,7 +552,6 @@ class ProgramView(AuthMixin, APIView):
         }
         return JsonResponse(context)
 
-
 class PostsView(AuthMixin, APIView):
     endpoint = '/api/posts'
     per_page = 30
@@ -572,7 +571,6 @@ class PostsView(AuthMixin, APIView):
         for post in posts:
             posts_data.append({
                 'id'            : post.reference,
-                'user'          : {'id': post.user},
                 'content'       : post.content,
                 'attachements'  : post.attachements,
                 'liked'         : PostLike.objects.filter(post=post, user=user_id).exists(),
@@ -726,7 +724,7 @@ class TogglePostLikeView(AuthMixin, APIView):
             like = PostLike.objects.create(post=post, user=user_id)
         else:
             like.delete()
-        
+
         context['code'] = 200
         context['data'] = {
             'post'          : {'id': post.reference},
@@ -870,7 +868,6 @@ class CreatePostView(AuthMixin, APIView):
             }
         }
         return JsonResponse(context)
-
 
 class RoomsView(AuthMixin, APIView):
     endpoint = '/api/rooms'

@@ -143,6 +143,7 @@ class AIFitnessCoach:
         )
 
         try:
+            print(response.text)
             response = json.loads(response.text)
             return response
         except Exception as e:
